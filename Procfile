@@ -1,1 +1,1 @@
-web: node http-server\bin\http-server
+web: node web.js

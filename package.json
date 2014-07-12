@@ -2,9 +2,14 @@
   "name": "vicpermits",
   "version": "1.0.0",
   "description": "Victorian Building Permits (Govhack 2014).",
-  "main": "web.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/sdesalas/vicpermits.git"
+  },
+  "engines": {
+    "node": "0.10.x"
+  },
+  "dependencies": {
+    "node-static": "0.7.x"
   }
 }
