@@ -1,9 +1,5 @@
-var static = require('node-static');
+var express = require('express'); 
+var app = express();
 
-var fileServer = new static.Server('./www');
-
-require('http').createServer(function (request, response) {
-    request.addListener('end', function () {
-        fileServer.serve(request, response);
-    }).resume();
-}).listen(8080);
+app.use(express.static('./www'));
+app.listen(process.env.PORT || 3000);

@@ -10,7 +10,6 @@
     "node": "0.10.x"
   },
   "dependencies": {
-    "node-static": "0.7.x",
-    "http-server": "0.6.x"
+    "express": "3.x"
   }
 }
