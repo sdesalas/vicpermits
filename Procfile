@@ -1,1 +1,1 @@
-web: http-server www -p 80
+web: http-server ./www -p 80
