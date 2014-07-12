@@ -1,1 +1,1 @@
-web: node web.js
+web: http-server www -p 80
