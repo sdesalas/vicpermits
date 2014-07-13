@@ -67,3 +67,40 @@ GROUP BY postcode
 
 SELECT COUNT(*) FROM permits_by_postcode_2013;
 
+
+
+
+
+
+-- TIMELINE DATA
+
+
+TRUNCATE TABLE permits_by_date;
+
+INSERT INTO permits_by_date (permit_date, works_total, postcodes, permits)
+SELECT g.permit_date, SUM(g.works_total) AS works_total, GROUP_CONCAT(g.postcode) AS postcodes, SUM(g.permits) AS permits
+FROM(	SELECT permit_date, SUM(cost_of_works) AS works_total, postcode, COUNT(*) AS permits
+	FROM `vba-datavic-building-permits-2010_csv`
+	GROUP BY permit_date, postcode
+	UNION ALL 
+	SELECT permit_date, SUM(cost_of_works) AS works_total, postcode, COUNT(*) AS permits
+	FROM `vba-datavic-building-permits-2011_csv`
+	GROUP BY permit_date, postcode
+	UNION ALL 
+	SELECT permit_date, SUM(cost_of_works) AS works_total, postcode, COUNT(*) AS permits
+	FROM `vba-datavic-building-permits-2012_csv`
+	GROUP BY permit_date, postcode
+	UNION ALL 
+	SELECT permit_date, SUM(cost_of_works) AS works_total, postcode, COUNT(*) AS permits
+	FROM `vba-datavic-building-permits-2013_csv`
+	GROUP BY permit_date, postcode
+	)g
+WHERE g.permit_date >= STR_TO_DATE('2010-01-01', '%Y-%m-%d')
+GROUP BY g.permit_date
+ORDER BY permit_date;
+
+SELECT COUNT(*) FROM permits_by_date;
+
+SELECT * FROM permits_by_date;
+
+
