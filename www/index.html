@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <style>
 
-body {padding: 0 20px;}
+body {padding: 0 20px; min-width: 940px;}
 body svg {border: 1px solid #ccc; width: 100%;}
 body svg path.postcode { /*fill: #CED5EB;*/ fill: red; stroke: #5D6EA8;}
 body svg path.postcode.selected { fill: red; }
@@ -48,7 +48,7 @@ $ <span id="works-total">0</span>
     <a href="#2013">2013</a>
   </li>
   <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
-  <li><a id="play" href="#timeline">Play History</a></li>
+  <li><a id="play" href="#timeline">Play Timelapse</a></li>
 </ul>
 <div id="main">
 	<div id="legend">
@@ -79,7 +79,7 @@ $ <span id="works-total">0</span>
 
 $(window).resize(function() {
 	console.log('resizing..')
-	App.map.height = $(window).height() - 145;
+	App.map.height = $(window).height() - 150;
 	$('#svg').height(App.map.height);
 })
 

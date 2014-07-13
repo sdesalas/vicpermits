@@ -28,7 +28,7 @@
         init: function(selector) {
 
             this.width = $(selector).width();
-            this.height = $(window).height() - 145;
+            this.height = $(window).height() - 150;
 
             this.svg = d3.select("#svg").attr("height", this.height);
 
@@ -278,7 +278,7 @@
 
             $('ul.nav li').removeClass('active');
             $(this.button.parentNode).addClass('active');
-            $(this.button).text('Stop Playing');
+            $(this.button).text('Stop Timelapse');
 
         },
 
@@ -296,7 +296,8 @@
         finish: function() {
 
             this.stop();
-            $(this.button).text('Finished!!').style('background', 'grey').enable(false);
+            $(this.button).text('Finished!!').css('background', '#ccc').css('color', '#666').attr('disabled','disabled');
+            $(this.button).off('click');
 
         },
 
