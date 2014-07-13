@@ -66,7 +66,7 @@
                 .projection(this.projection);
 
             // Load this bigger file separately
-            d3.tsv("data/vicpermit.timeline.2.txt", function(d) { 
+            d3.tsv("data/vicpermit.timeline.txt", function(d) { 
                 //console.log('loaded timeline', d);
                 App.data.timeline = d; 
             });
