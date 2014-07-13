@@ -134,12 +134,17 @@
 
             // Create an index of postcodes
             App.data.postcodes = {};
+            var works_total = 0;
 
             for(var i = 0; i < bypostcode.length; i++) {
                 App.data.postcodes[bypostcode[i].postcode] = bypostcode[i];
+                works_total += Math.floor(bypostcode[i].cost_of_works);
             }
 
             console.log('Loaded!', App.data);
+
+            $('#works-total').text(App.util.prettynumber(works_total));
+            $('#works-date').text('Jan to Dec ' + App.map.year);
 
             App.map.group.selectAll(".postcode")
               .data(topojson.feature(App.data.vicmap, App.data.vicmap.objects["Victoria.Postcodes.2"]).features)
@@ -288,6 +293,13 @@
 
         },
 
+        finish: function() {
+
+            this.stop();
+            $(this.button).text('Finished!!').style('background', 'grey').enable(false);
+
+        },
+
         i: 0,
 
         total: 0,
@@ -330,6 +342,12 @@
             }
 
             this.i++;
+
+            if (this.i >= App.data.timeline.length) {
+
+                this.finish();
+
+            }
 
         }
     };
