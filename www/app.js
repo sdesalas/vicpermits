@@ -5,6 +5,17 @@
 
         init: function() {
 
+            if ($.browser.chrome || $.browser.safari) {
+
+                App.map.init("#main");
+                App.legend.init("#legend");
+
+            } else {
+
+
+                $('#main').css('background','none');
+                $('#nobrowser').show();
+            }
 
         },
 
@@ -77,14 +88,21 @@
               });
 
 
-              this.show(2013);
+              d3.json("data/victoria.topojson", function(d) {
+
+                    App.data.vicmap = d;
+                    App.map.show(2013);
+
+              });
+
+
 
         },
 
 
         show: function(year) {
 
-            switch(year) {
+            switch(Math.floor(year)) {
 
                 case 2010:
                 case 2011:
@@ -92,7 +110,6 @@
                 case 2013:
                     this.year = year;
                     queue()
-                        .defer(d3.json, "data/victoria.topojson")
                         .defer(d3.tsv, "data/vicpermit.bypostcode." + year + ".txt", function(d) { return d;})
                         .await(this.onready);
 
@@ -103,10 +120,9 @@
 
         },
 
-        onready: function(error, vicmap, bypostcode) {
+        onready: function(error, bypostcode) {
 
             // ALL READY? GO!
-            App.data.vicmap = vicmap;
 
             // Remove loading bar
             $(App.map.svg[0]).css('background', 'white');
@@ -121,7 +137,7 @@
             console.log('Loaded!', App.data);
 
             App.map.group.selectAll(".postcode")
-              .data(topojson.feature(vicmap, vicmap.objects["Victoria.Postcodes.2"]).features)
+              .data(topojson.feature(App.data.vicmap, App.data.vicmap.objects["Victoria.Postcodes.2"]).features)
             .enter().append("path")
               .attr("class", function(d) { return "postcode" })
               .attr("id", function(d) { return "p" + d.id; })
@@ -158,13 +174,16 @@
         scale: 1,
 
         zoom: function(inward, source) {
-            var d = source.__data__;
+            var d = source ? source.__data__ : null;
 
             if (d) {
                 var centroid = this.path.centroid(d);
                 this.x = centroid[0];
                 this.y = centroid[1];
                 this.centered = d;
+            } else {
+                this.x = this.width / 2;
+                this.y = this.height / 2;
             }
 
             if (inward) {
@@ -192,7 +211,7 @@
             //event.target.setAttribute('transform', 'translate(' + this.width / 2 + ',' + this.height / 2 + ')scale(' + this.scale + ')translate(' + -this.x + ',' + -this.y + ')');
             this.x = (this.x || this.width/2) - (ui.position.left - ui.originalPosition.left) / this.scale;
             this.y = (this.y || this.height/2) - (ui.position.top - ui.originalPosition.top) / this.scale;
-            //console.log({x: this.x, y: this.y, dx: (ui.position.left - ui.originalPosition.left), dy: (ui.position.top - ui.originalPosition.top)});
+            console.log({target: event.currentTarget, ui: ui, width: this.width, height: this.height, x: this.x, y: this.y, dx: (ui.position.left - ui.originalPosition.left), dy: (ui.position.top - ui.originalPosition.top)});
             event.target.setAttribute('transform', 'translate(' + this.width / 2 + ',' + this.height / 2 + ')scale(' + this.scale + ')translate(' + -this.x + ',' + -this.y + ')');
             this.x = undefined;
             this.y = undefined;
@@ -271,7 +290,9 @@
 
                     if (this.i % 2 == 0) {
                         $('#works-total').text(App.util.prettynumber(this.total));
-                        $('#works-date').text(d.permit_date);
+                    }
+                    if (this.i % 5 == 0) {
+                        $('#works-date').text(App.util.prettydate(d.permit_date));
                     }
                 }
             }
@@ -279,7 +300,7 @@
             this.i++;
 
         }
-    }
+    };
 
 
     App.util = {
@@ -291,13 +312,18 @@
                 output.unshift(reverse.splice(0, 3).reverse().join(''));
             }
             return output.join(',');
+        },
+        prettydate: function(date) {
+            var m_names = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
+            var array = date.split('/');
+            var d = new Date(array[2], Math.floor(array[1]) - 1, array[0], 0, 0, 0, 0);
+            return d.getDate() + " " + m_names[d.getMonth()] + " " + d.getFullYear();
         }
-    }
+    };
 
 
     App.init();
-    App.map.init("#main");
-    App.legend.init("#legend");
+
     $(window).resize();
 
 })();

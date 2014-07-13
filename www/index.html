@@ -7,19 +7,18 @@
 body {padding: 0 20px;}
 body svg {border: 1px solid #ccc; width: 100%;}
 body svg path.postcode { /*fill: #CED5EB;*/ fill: red; stroke: #5D6EA8;}
-body svg path.postcode.selected { /*fill: #CED5EB;*/ fill: red; }
+body svg path.postcode.selected { fill: red; }
 
 ul.nav-pills {margin-bottom: 14px;}
 
 #main {position: relative; background: #fff url('img/loading.gif') no-repeat center center;}
-div#legend {position: absolute; top: 20px; right: 20px; background: #08c; color: white; width: 150px; height: 180px; border-radius: 5px; padding: 0 10px 15px; display: none;}
-
-
+div#legend {position: absolute; top: 20px; right: 20px; background: #08c; color: white; width: 150px; border-radius: 5px; padding: 0 20px; display: none;}
+div#zoom-buttons {position: absolute; top: 20px; left: 20px; font-weight: bold;}
+div#zoom-buttons a {background: #08c;}
+div#nobrowser {position: absolute; padding-top: 70px; width: 400px; height: 140px; text-align: center; top: 0; left: 0; right: 0; margin: auto; bottom: 0; background: transparent url('img/browsers.png') no-repeat center 0; display: none;}
 
 #works-bar {color: #333; float:right; font: 42px Impact; text-shadow: 1px 2px 0px rgba(255, 255, 255, 1);}
 #works-date {color: #999; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; font-size: 14px; text-align: right;}
-
-path.postcode.o9 {}
 
 
 </style>
@@ -33,7 +32,6 @@ path.postcode.o9 {}
 <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.11/jquery.mousewheel.min.js"></script>
 <script src="////cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
-<script src="lib/jquery.animateNumber.min.js"></script>
 
 </head>
 <body>
@@ -43,11 +41,11 @@ $ <span id="works-total">0</span>
 </div>
 <h2>Victoria Building Activity By Postcode</h2>
 <ul class="nav nav-pills">
-  <li><a href="#">2010</a></li>
-  <li><a href="#">2011</a></li>
-  <li><a href="#">2012</a></li>
-  <li class="active">
-    <a href="#">2013</a>
+  <li class="year"><a href="#2010">2010</a></li>
+  <li class="year"><a href="#2011">2011</a></li>
+  <li class="year"><a href="#2012">2012</a></li>
+  <li class="year active">
+    <a href="#2013">2013</a>
   </li>
   <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
   <li><a id="play" href="#timeline">Play History</a></li>
@@ -56,6 +54,8 @@ $ <span id="works-total">0</span>
 	<div id="legend">
 		<h5>{{suburb}}</h5>
 		<dl>
+		  <dt>Area Type:</dt>
+		  <dd>{{type}}</dd>
 		  <dt>Postcode:</dt>
 		  <dd>{{postcode}}</dd>
 		  <dt>Permits Issued:</dt>
@@ -64,7 +64,15 @@ $ <span id="works-total">0</span>
 		  <dd>${{total}}</dd>
 		</dl>
 	</div>
+	<div id="zoom-buttons" class="btn-group btn-group-vertical">
+		<a id="zoom-in" href="#" class="btn btn-info">+</a>
+		<a id="zoom-out" href="#" class="btn btn-info">-</a>
+	</div>
 	<svg id="svg" />
+	<div id="nobrowser">
+		<h5>Your browser is not supported!</h5>
+		<p>Please use either Safari or Chrome to browse this visualization</p>
+	</div>
 </div>
 <script>
 
@@ -91,6 +99,27 @@ $('#play').click(function(e) {
 	}
 });
 
+$('.nav-pills li.year a').click(function(e) {
+	var target = e.currentTarget;
+	if (target && $(target).attr("href")) {
+		$('.nav-pills li.year').removeClass('active');
+		$(e.currentTarget.parentNode).addClass('active');
+		var year = $(target).attr("href").slice(1);
+		console.log('opening year ' +  year);
+		App.map.show(year);
+	}
+});
+
+$('#zoom-in').click(function() {
+	App.map.zoom(true);
+	return false;
+});
+
+$('#zoom-out').click(function() {
+	App.map.zoom(false);
+	return false;
+});
+
 // $(window).blur(function() {
 // 	$('ul.nav li').removeClass('active');
 // 	$('#play').text('Keep Playing');
@@ -98,17 +127,6 @@ $('#play').click(function(e) {
 // });
 
 
-/*
-
-
-		$('#works-total').animateNumber({ 
-			number: 165000,
-			numberStep: function(no, tween) {
-				no = Math.floor(no).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-				$(tween.elem).text(no);
-			}
-		});
-*/
 
 
 
