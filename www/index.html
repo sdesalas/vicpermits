@@ -5,13 +5,16 @@
 <style>
 
 body {padding: 0 20px;}
-body svg {border: 1px solid #ccc;}
-body svg path.postcode { /*fill: #CED5EB;*/ fill: #5D6EA8; stroke: #5D6EA8;}
+body svg {border: 1px solid #ccc; width: 100%;}
+body svg path.postcode { /*fill: #CED5EB;*/ fill: red; stroke: #5D6EA8;}
 body svg path.postcode.selected { /*fill: #CED5EB;*/ fill: red; }
 
 ul.nav-pills {margin-bottom: 14px;}
 
-#main {position: relative; }
+#main {position: relative; background: #fff url('img/loading.gif') no-repeat center center;}
+div#legend {position: absolute; top: 20px; right: 20px; background: #08c; color: white; width: 150px; height: 180px; border-radius: 5px; padding: 0 10px 15px; display: none;}
+
+
 
 #works-bar {color: #333; float:right; font: 42px Impact; text-shadow: 1px 2px 0px rgba(255, 255, 255, 1);}
 #works-date {color: #999; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; font-size: 14px; text-align: right;}
@@ -29,6 +32,7 @@ path.postcode.o9 {}
 <script src="//cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.11/jquery.mousewheel.min.js"></script>
+<script src="////cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
 <script src="lib/jquery.animateNumber.min.js"></script>
 
 </head>
@@ -39,14 +43,28 @@ $ <span id="works-total">0</span>
 </div>
 <h2>Victoria Building Activity By Postcode</h2>
 <ul class="nav nav-pills">
-  <li><a href="#">2010/11</a></li>
-  <li><a href="#">2011/12</a></li>
+  <li><a href="#">2010</a></li>
+  <li><a href="#">2011</a></li>
+  <li><a href="#">2012</a></li>
   <li class="active">
-    <a href="#">2012/13</a>
+    <a href="#">2013</a>
   </li>
-  <li><a id="play-bydate" href="#bydate">Play History</a></li>
+  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</li>
+  <li><a id="play" href="#timeline">Play History</a></li>
 </ul>
-<div id="main" style="">
+<div id="main">
+	<div id="legend">
+		<h5>{{suburb}}</h5>
+		<dl>
+		  <dt>Postcode:</dt>
+		  <dd>{{postcode}}</dd>
+		  <dt>Permits Issued:</dt>
+		  <dd>{{no_permits}}</dd>
+		  <dt>Total Cost of Works:</dt>
+		  <dd>${{total}}</dd>
+		</dl>
+	</div>
+	<svg id="svg" />
 </div>
 <script>
 
@@ -57,7 +75,7 @@ $(window).resize(function() {
 	$('#svg').height(App.map.height);
 })
 
-$('#play-bydate').click(function(e) {
+$('#play').click(function(e) {
 	var a = e.currentTarget;
 	var li = e.currentTarget.parentNode;
 	if (!$(li).hasClass('active')) {
@@ -65,14 +83,19 @@ $('#play-bydate').click(function(e) {
 		$('ul.nav li').removeClass('active');
 		$(li).addClass('active');
 		$(a).text('Stop Playing');
-		App.play.init();
+		App.timeline.start();
 	} else {
-		console.log('stopping');
 		$('ul.nav li').removeClass('active');
-		App.play.stop();
+		App.timeline.stop();
 		$(a).text('Keep Playing');
 	}
 });
+
+// $(window).blur(function() {
+// 	$('ul.nav li').removeClass('active');
+// 	$('#play').text('Keep Playing');
+// 	App.timeline.stop();
+// });
 
 
 /*

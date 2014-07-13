@@ -19,8 +19,7 @@
             this.width = $(selector).width();
             this.height = $(window).height() - 145;
 
-            this.svg = d3.select("#main").append("svg")
-                .attr("height", this.height).attr("id", "svg");
+            this.svg = d3.select("#svg").attr("height", this.height);
 
             // this.zoom = d3.behavior.zoom()
             //     .scaleExtent([1, 10])
@@ -46,24 +45,19 @@
             this.group = this.svg.append("g");
 
             this.projection = d3.geo.albers()
-                .center([11, -36.5])
+                .center([11, -37.3])
                 .rotate([-137, 0, 4])
                 .parallels([-45, -50])
-                .scale(1200 * 7)
+                .scale(1200 * 14)
                 .translate([this.width / 2, this.height / 2]);
 
             this.path = d3.geo.path()
                 .projection(this.projection);
 
-            queue()
-                .defer(d3.json, "data/victoria.topojson")
-                .defer(d3.tsv, "data/vicpermit.bypostcode.txt", function(d) { return d;})
-                .await(this.onready);
-
             // Load this bigger file separately
-            d3.tsv("data/vicpermit.bydate.txt", function(d) { App.data.bydate = d; });
+            d3.tsv("data/vicpermit.timeline.txt", function(d) { App.data.timeline = d; });
 
-            //Add event listeners
+            //Add zoom listener
             var svg = this.svg[0];
             $(svg).mousewheel(function(e) {
                 if (e && e.deltaY) {
@@ -71,7 +65,7 @@
                 }
             });
 
-
+            // Add dragging behaviour on group
             $(this.group[0])
               .draggable()
               .bind('mousedown', function(event, ui){
@@ -83,12 +77,39 @@
               });
 
 
+              this.show(2013);
+
+        },
+
+
+        show: function(year) {
+
+            switch(year) {
+
+                case 2010:
+                case 2011:
+                case 2012:
+                case 2013:
+                    this.year = year;
+                    queue()
+                        .defer(d3.json, "data/victoria.topojson")
+                        .defer(d3.tsv, "data/vicpermit.bypostcode." + year + ".txt", function(d) { return d;})
+                        .await(this.onready);
+
+                break;
+
+            }
+
+
         },
 
         onready: function(error, vicmap, bypostcode) {
 
             // ALL READY? GO!
             App.data.vicmap = vicmap;
+
+            // Remove loading bar
+            $(App.map.svg[0]).css('background', 'white');
 
             // Create an index of postcodes
             App.data.postcodes = {};
@@ -108,6 +129,19 @@
 
             App.map.showPostcodes();
 
+            // Show/hide legend
+            $('.postcode').hover(function(e) {
+                var e = e.currentTarget;
+                if (e && e.id) {
+                    var id = e.id.slice(1);
+                    App.legend.show(id);
+                    //$(e).css('stroke-width', '2px');
+                }
+            }, function(e) {
+                App.legend.hide();
+                //$(e.currentTarget).css('stroke-width', 1 / App.map.scale + 'px');
+            });
+
         },
 
         showPostcodes: function() {
@@ -115,9 +149,8 @@
            $('.postcode').each(function(i, e) {
                 var postcode = e.id.substr(1);
                 var d = App.data.postcodes[postcode];
-                if (d) {
-                    $(e).css('fill-opacity', d.opacity * 1.5);
-                }
+                var opacity = (d && d.opacity) ? d.opacity : 0;
+                $(e).css('fill-opacity', opacity * 1.5);
            });
 
         },
@@ -141,7 +174,7 @@
             }
 
             if (this.scale < 0.5) {this.scale = 0.5; return;}
-            if (this.scale > 8) {this.scale = 8; return;}
+            if (this.scale > 5) {this.scale = 5; return;}
 
             //console.log('zooming', x, y, this.scale, source, d);
             this.group.transition()
@@ -159,7 +192,7 @@
             //event.target.setAttribute('transform', 'translate(' + this.width / 2 + ',' + this.height / 2 + ')scale(' + this.scale + ')translate(' + -this.x + ',' + -this.y + ')');
             this.x = (this.x || this.width/2) - (ui.position.left - ui.originalPosition.left) / this.scale;
             this.y = (this.y || this.height/2) - (ui.position.top - ui.originalPosition.top) / this.scale;
-            console.log({x: this.x, y: this.y, dx: (ui.position.left - ui.originalPosition.left), dy: (ui.position.top - ui.originalPosition.top)});
+            //console.log({x: this.x, y: this.y, dx: (ui.position.left - ui.originalPosition.left), dy: (ui.position.top - ui.originalPosition.top)});
             event.target.setAttribute('transform', 'translate(' + this.width / 2 + ',' + this.height / 2 + ')scale(' + this.scale + ')translate(' + -this.x + ',' + -this.y + ')');
             this.x = undefined;
             this.y = undefined;
@@ -168,11 +201,43 @@
 
     };
 
-    App.play = {
+    App.legend = {
 
-        init: function() {
+        init: function(selector) {
 
-            this.intervalId = window.setInterval(function() { App.play.tick(); }, 20);
+            this.dom = $(selector)[0];
+            this.template = $(selector).html();
+
+        },
+
+
+        show: function(code) {
+
+            if (App.data.postcodes && App.data.postcodes[code]) {
+                var d = App.data.postcodes[code];
+                d.total = App.util.prettynumber(Math.floor(d.cost_of_works || 0))
+                $(this.dom).html(Mustache.render(this.template, d));
+                $(this.dom).show();
+            };
+
+        },
+
+        hide: function() {
+            $(this.dom).hide();
+        }
+
+    };
+
+    App.timeline = {
+
+        start: function() {
+
+            this.intervalId = window.setInterval(function() { App.timeline.tick(); }, 20);
+            
+            // Are we beginning? Clear backgrounds
+            if (this.i == 0) {
+                $('.postcode').css('fill-opacity', 0);
+            }
 
         },
 
@@ -188,44 +253,38 @@
 
         tick: function() {
 
-            if (!App.data && !App.data.bydate) { return; }
+            if (!App.data && !App.data.timeline) { return; }
 
-            var d = App.data.bydate[this.i];
+            var d = App.data.timeline[this.i];
+            var e = $('#p' + d.postcode)[0];
 
-            $('#p' + d.postcode).css('fill','red');
+            if (e) {
+                e.permits = (e.permits || 0) + 1;
+                if (e.permits > 20) e.permits = 20;
 
-            if (d.cost_of_works > 0) {
+                $(e).css('fill','red');
+                $(e).css('fill-opacity', e.permits * 0.05 )
 
-                this.total += Math.floor(d.cost_of_works || 0);
+                if (d.cost_of_works > 0) {
 
-                if (this.i % 2 == 0) {
+                    this.total += Math.floor(d.cost_of_works || 0);
 
-                    $('#works-total').text(this.commify(this.total));
-                    $('#works-date').text(d.permit_date);
-                }
-
-                /*
-                $('#works-total').animateNumber({ 
-                    number: this.total,
-                    numberStep: function(no, tween) {
-                        var output = [];
-                        var reverse = Math.floor(no).toString().split('').reverse();
-                        while (reverse.length) {
-                            output.unshift(reverse.splice(0, 3).reverse().join(''));
-                        }
-                        //no..replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                        $(tween.elem).text(output.join(','));
+                    if (this.i % 2 == 0) {
+                        $('#works-total').text(App.util.prettynumber(this.total));
+                        $('#works-date').text(d.permit_date);
                     }
-                });*/
-
+                }
             }
-
 
             this.i++;
 
-        },
+        }
+    }
 
-        commify: function(no) {
+
+    App.util = {
+        prettynumber: function(no) {
+            if (!no || typeof no !== 'number') return "0";
             var output = [];
             var reverse = Math.floor(no).toString().split('').reverse();
             while (reverse.length) {
@@ -238,7 +297,8 @@
 
     App.init();
     App.map.init("#main");
-
+    App.legend.init("#legend");
+    $(window).resize();
 
 })();
 
