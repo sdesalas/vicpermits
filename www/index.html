@@ -12,13 +12,13 @@ body svg path.postcode.selected { fill: red; }
 ul.nav-pills {margin-bottom: 14px;}
 
 #main {position: relative; background: #fff url('img/loading.gif') no-repeat center center;}
-div#legend {position: absolute; top: 20px; right: 20px; background: #08c; color: white; width: 150px; border-radius: 5px; padding: 0 20px; display: none;}
-div#zoom-buttons {position: absolute; top: 20px; left: 20px; font-weight: bold;}
+div#legend {position: absolute; top: 20px; right: 20px; background: #08c; color: white; width: 150px; border-radius: 5px; padding: 0 20px; display: none;box-shadow: 0px 0px 1px 1px rgba(255, 255, 255, 0.9);}
+div#zoom-buttons {position: absolute; top: 20px; left: 20px; font-weight: bold; border-radius: 5px; box-shadow: 0px 0px 1px 1px rgba(255, 255, 255, 0.9);}
 div#zoom-buttons a {background: #08c;}
 div#nobrowser {position: absolute; padding-top: 70px; width: 400px; height: 140px; text-align: center; top: 0; left: 0; right: 0; margin: auto; bottom: 0; background: transparent url('img/browsers.png') no-repeat center 0; display: none;}
 
 #works-bar {color: #333; float:right; font: 42px Impact; text-shadow: 1px 2px 0px rgba(255, 255, 255, 1);}
-#works-date {color: #999; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; font-size: 14px; text-align: right;}
+#works-date {color: #999; font-weight: bold; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; font-size: 14px; text-align: right;}
 
 
 </style>
@@ -39,7 +39,7 @@ div#nobrowser {position: absolute; padding-top: 70px; width: 400px; height: 140p
 $ <span id="works-total">0</span>
 <p id="works-date"></p>
 </div>
-<h2>Victoria Building Activity By Postcode</h2>
+<h2>Victoria - Building Activity By Postcode</h2>
 <ul class="nav nav-pills">
   <li class="year"><a href="#2010">2010</a></li>
   <li class="year"><a href="#2011">2011</a></li>
@@ -84,29 +84,21 @@ $(window).resize(function() {
 })
 
 $('#play').click(function(e) {
-	var a = e.currentTarget;
 	var li = e.currentTarget.parentNode;
 	if (!$(li).hasClass('active')) {
-		console.log('playing..')
-		$('ul.nav li').removeClass('active');
-		$(li).addClass('active');
-		$(a).text('Stop Playing');
 		App.timeline.start();
 	} else {
-		$('ul.nav li').removeClass('active');
 		App.timeline.stop();
-		$(a).text('Keep Playing');
 	}
 });
 
 $('.nav-pills li.year a').click(function(e) {
 	var target = e.currentTarget;
 	if (target && $(target).attr("href")) {
+		var year = $(target).attr("href").slice(1);
+		App.map.show(year);
 		$('.nav-pills li.year').removeClass('active');
 		$(e.currentTarget.parentNode).addClass('active');
-		var year = $(target).attr("href").slice(1);
-		console.log('opening year ' +  year);
-		App.map.show(year);
 	}
 });
 

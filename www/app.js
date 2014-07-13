@@ -9,9 +9,9 @@
 
                 App.map.init("#main");
                 App.legend.init("#legend");
+                App.timeline.init("#play");
 
             } else {
-
 
                 $('#main').css('background','none');
                 $('#nobrowser').show();
@@ -66,7 +66,10 @@
                 .projection(this.projection);
 
             // Load this bigger file separately
-            d3.tsv("data/vicpermit.timeline.txt", function(d) { App.data.timeline = d; });
+            d3.tsv("data/vicpermit.timeline.2.txt", function(d) { 
+                //console.log('loaded timeline', d);
+                App.data.timeline = d; 
+            });
 
             //Add zoom listener
             var svg = this.svg[0];
@@ -109,6 +112,8 @@
                 case 2012:
                 case 2013:
                     this.year = year;
+                    App.timeline.reset = true;
+                    App.timeline.stop();
                     queue()
                         .defer(d3.tsv, "data/vicpermit.bypostcode." + year + ".txt", function(d) { return d;})
                         .await(this.onready);
@@ -232,6 +237,7 @@
 
         show: function(code) {
 
+            //console.log(App.data.postcodes[code]);
             if (App.data.postcodes && App.data.postcodes[code]) {
                 var d = App.data.postcodes[code];
                 d.total = App.util.prettynumber(Math.floor(d.cost_of_works || 0))
@@ -249,20 +255,36 @@
 
     App.timeline = {
 
+        init: function(selector) {
+
+            this.button = $(selector)[0];
+
+        }, 
+
         start: function() {
 
-            this.intervalId = window.setInterval(function() { App.timeline.tick(); }, 20);
+            this.intervalId = window.setInterval(function() { App.timeline.tick(); }, 30);
             
             // Are we beginning? Clear backgrounds
-            if (this.i == 0) {
+            if (this.reset) {
                 $('.postcode').css('fill-opacity', 0);
+                this.reset = false;
             }
+
+            $('ul.nav li').removeClass('active');
+            $(this.button.parentNode).addClass('active');
+            $(this.button).text('Stop Playing');
 
         },
 
         stop: function() {
 
-            window.clearInterval(this.intervalId);
+            if (this.intervalId) {
+                window.clearInterval(this.intervalId);
+                $('ul.nav li').removeClass('active');
+                $(this.button).text('Keep Playing');
+                this.intervalId = 0;
+            }
 
         },
 
@@ -270,28 +292,38 @@
 
         total: 0,
 
+        reset: true,
+
         tick: function() {
 
             if (!App.data && !App.data.timeline) { return; }
 
             var d = App.data.timeline[this.i];
-            var e = $('#p' + d.postcode)[0];
+            if (!d || !d.postcodes) {return; }
 
-            if (e) {
-                e.permits = (e.permits || 0) + 1;
-                if (e.permits > 20) e.permits = 20;
+            // Get all nodes matching that day
+            var selector = "#p" + d.postcodes.split(',').join(',#p');
+            var nodes = $(selector);
 
-                $(e).css('fill','red');
-                $(e).css('fill-opacity', e.permits * 0.05 )
+            if (nodes && nodes.length) {
+                
+                // Highlight all the postcodes with permits
+                // issued for today
+                nodes.each(function(i, e) {
+                    e.permits = (e.permits || 0) + 1;
+                    if (e.permits > 40) e.permits = 40;
+                    if ($(e).css('fill') !== 'red') {
+                        $(e).css('fill','red'); 
+                    }
+                    $(e).css('fill-opacity', e.permits * 0.025 )
+                });
 
-                if (d.cost_of_works > 0) {
+                if (d.works_total > 0) {
 
-                    this.total += Math.floor(d.cost_of_works || 0);
+                    this.total += Math.floor(d.works_total || 0);
 
                     if (this.i % 2 == 0) {
                         $('#works-total').text(App.util.prettynumber(this.total));
-                    }
-                    if (this.i % 5 == 0) {
                         $('#works-date').text(App.util.prettydate(d.permit_date));
                     }
                 }
@@ -315,8 +347,8 @@
         },
         prettydate: function(date) {
             var m_names = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
-            var array = date.split('/');
-            var d = new Date(array[2], Math.floor(array[1]) - 1, array[0], 0, 0, 0, 0);
+            var array = date.split('-');
+            var d = new Date(array[0], Math.floor(array[1]) - 1, array[2], 0, 0, 0, 0);
             return d.getDate() + " " + m_names[d.getMonth()] + " " + d.getFullYear();
         }
     };
